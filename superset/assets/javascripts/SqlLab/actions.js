@@ -1,3 +1,4 @@
+/* global notify */
 import shortid from 'shortid';
 import { now } from '../modules/dates';
 const $ = require('jquery');
@@ -326,8 +327,31 @@ export function popStoredQuery(urlId) {
           autorun: newQuery.autorun ? newQuery.autorun : false,
           sql: newQuery.sql ? newQuery.sql : 'SELECT ...',
         };
+        notify.success('Query loaded in a new tab from link');
         dispatch(addQueryEditor(queryEditorProps));
       },
+      error: () => notify.error("The query couldn't be loaded"),
+    });
+  };
+}
+export function popSavedQuery(saveQueryId) {
+  return function (dispatch) {
+    $.ajax({
+      type: 'GET',
+      url: `/savedqueryviewapi/api/get/${saveQueryId}`,
+      success: (data) => {
+        const sq = data.result;
+        const queryEditorProps = {
+          title: sq.label,
+          dbId: sq.db_id,
+          schema: sq.schema,
+          autorun: false,
+          sql: sq.sql,
+        };
+        dispatch(addQueryEditor(queryEditorProps));
+        notify.success('Query loaded in a new tab from link');
+      },
+      error: () => notify.error("The query couldn't be loaded"),
     });
   };
 }
