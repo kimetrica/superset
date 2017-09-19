@@ -10,4 +10,4 @@ docs/_build
 _static
 _images
 _modules
-
+.env
