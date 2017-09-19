@@ -1,0 +1,47 @@
+version: '2'
+services:
+
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  superset:
+    restart: "no"
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8000:8000"
+    volumes:
+      # Don't map . to usr/src/app (or ./superset) because it breaks the installation
+      # (e.g. `superset/assets/node_modules` won't be available any more,
+      # and neither will `superset/static/assets/dist`)
+      # Instead map individual subdirectories we want to change
+      - ./superset/assets/javascripts:/usr/src/app/superset/assets/javascripts
+      - ./superset/connectors:/usr/src/app/superset/connectors
+      - ./superset/views:/usr/src/app/superset/views
+      - ./contrib:/usr/src/app/contrib
+    env_file:
+      - .env
+    environment:
+      - APP=${APP}
+      - ENV=${ENV}
+      - PGHOST=db
+      - PGDATABASE=${APP}${ENV}
+      - PGUSER=${APP}${ENV}_superset
+      # PGPASSWORD has to be provided by the environment or in a `.env` file
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${APP}${ENV}:${PGPASSWORD}@db:5432/${APP}${ENV}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_REDIS_DB=1
+      - CELERY_RESULT_REDIS_DB=1
+      # Gunicorn Access Log Format
+      # For fluentd logging use the following line instead:
+      # 'ACCESS_LOGFORMAT={ "time_local":"%(t)s", "remote_addr":"%(h)s", "request":"%(U)s", "query":"%(q)s", "request_method":"%(m)s", "status":%(s)s, "body_bytes_sent":%(B)d, "request_time":%(D)d, "http_user_agent":"%(a)s", "http_referrer":"%(f)s", "x_forwarded_for": "%({X-Forwarded-For}i)s"}'
+      - ACCESS_LOGFORMAT=%(h)s %(r)s %(s)s %(B)d %(L)s
+      # Set RAVEN_DSN in local env to send errors and logs to Sentry
+      - RAVEN_DSN=
+    command: --timeout=600 --reload

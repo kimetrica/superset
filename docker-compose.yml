@@ -1,0 +1,104 @@
+version: '2'
+services:
+
+  db:
+    restart: unless-stopped
+    build:
+      context: ./docker/db
+    mem_limit: 500M
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    # APP, ENV and POSTGRES_PASSWORD are used by create_db.sh to setup DB
+    environment:
+      - APP=${APP}
+      - ENV=${ENV}
+      # Using `POSTGRES_PASSWORD` here because it will be interpreted by the `postgis` container as well,
+      # it will be used as password for the superuser. The application user will use the same password.
+      - POSTGRES_PASSWORD=${PGPASSWORD}
+      # setting PGPASSWORD, so `psql` in `create_db.sh` will use it to connect and setup the app DB
+      - PGPASSWORD=${PGPASSWORD}
+
+  redis:
+    restart: unless-stopped
+    image: redis:3.2.4
+    mem_limit: 300M
+    command:
+      - redis-server
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - volatile-lru
+      - --save
+      - "60 1"
+
+  superset:
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ./docker/superset/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - PIP_TRUSTED_HOST
+        - PIP_INDEX_URL
+        #- NPM_CONFIG_REGISTRY
+    depends_on:
+      - db
+      - redis
+    environment:
+      - APP=${APP}
+      - ENV=${ENV}
+      - FLASK_APP=superset
+      - PGHOST=db
+      - PGDATABASE=${APP}${ENV}
+      - PGUSER=${APP}${ENV}_superset
+      # PGPASSWORD has to be provided by the environment or in a `.env` file
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${APP}${ENV}:${PGPASSWORD}@db:5432/${APP}${ENV}
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_REDIS_DB=1
+      - CELERY_RESULT_REDIS_DB=1
+      # Gunicorn Access Log Format
+      # For fluentd logging use the following line instead:
+      # 'ACCESS_LOGFORMAT={ "time_local":"%(t)s", "remote_addr":"%(h)s", "request":"%(U)s", "query":"%(q)s", "request_method":"%(m)s", "status":%(s)s, "body_bytes_sent":%(B)d, "request_time":%(D)d, "http_user_agent":"%(a)s", "http_referrer":"%(f)s", "x_forwarded_for": "%({X-Forwarded-For}i)s"}'
+      - ACCESS_LOGFORMAT=%(h)s %(r)s %(s)s %(B)d %(L)s
+      # Set RAVEN_DSN in local env to send errors and logs to Sentry
+      - RAVEN_DSN=
+      # Set credentials for OAuth providers in .env
+      - KOBOCAT_OAUTH_CONSUMER_KEY=${KOBOCAT_OAUTH_CONSUMER_KEY}
+      - KOBOCAT_OAUTH_CONSUMER_SECRET=${KOBOCAT_OAUTH_CONSUMER_SECRET}
+      - GOOGLE_OAUTH_CONSUMER_KEY=${GOOGLE_OAUTH_CONSUMER_KEY}
+      - GOOGLE_OAUTH_CONSUMER_SECRET=${GOOGLE_OAUTH_CONSUMER_SECRET}
+      # Allow http authorization requests - do not use in production
+      - OAUTHLIB_INSECURE_TRANSPORT=True
+
+  superset_celery_worker:
+    image: sst_superset
+    depends_on:
+      - db
+      - redis
+    environment:
+      - APP=${APP}
+      - ENV=${ENV}
+      - FLASK_APP=superset
+      - PGHOST=db
+      - PGDATABASE=${APP}${ENV}
+      - PGUSER=${APP}${ENV}_superset
+      # PGPASSWORD has to be provided by the environment or in a `.env` file
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${APP}${ENV}:${PGPASSWORD}@db:5432/${APP}${ENV}
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_REDIS_DB=1
+      - CELERY_RESULT_REDIS_DB=1
+      # Gunicorn Access Log Format
+      # For fluentd logging use the following line instead:
+      # 'ACCESS_LOGFORMAT={ "time_local":"%(t)s", "remote_addr":"%(h)s", "request":"%(U)s", "query":"%(q)s", "request_method":"%(m)s", "status":%(s)s, "body_bytes_sent":%(B)d, "request_time":%(D)d, "http_user_agent":"%(a)s", "http_referrer":"%(f)s", "x_forwarded_for": "%({X-Forwarded-For}i)s"}'
+      - ACCESS_LOGFORMAT=%(h)s %(r)s %(s)s %(B)d %(L)s
+      # Set RAVEN_DSN in local env to send errors and logs to Sentry
+      - RAVEN_DSN=
+    entrypoint: superset worker
+
+volumes:
+  # Persist the database, obviously
+  db_data:
+    external: false

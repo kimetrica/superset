@@ -1,0 +1,38 @@
+# Operating system packages required can be installed with:
+# sudo apt-get install -y libpq-dev gettext libxml2-dev libxslt1-dev libffi-dev libsasl2-dev
+
+# Upstream requirements, documented separately to make allow Docker to cache a layer
+# with the required Python dependencies
+boto3==1.4.4
+celery==3.1.25
+colorama==0.3.9
+cryptography==1.9
+flask==0.12.2
+flask-appbuilder==1.9.4
+flask-cache==0.13.1
+flask-migrate==2.0.3
+flask-script==2.0.5
+flask-sqlalchemy==2.1
+flask-testing==0.6.2
+flask-wtf==0.14.2
+flower==0.9.1
+future>=0.16.0, <0.17
+humanize==0.5.1
+gunicorn==19.7.1    
+markdown==2.6.8
+pandas==0.20.2
+parsedatetime==2.0.0
+pydruid==0.3.1
+PyHive>=0.4.0
+python-dateutil==2.6.0
+requests==2.17.3
+simplejson==3.10.0
+six==1.10.0
+sqlalchemy==1.1.9
+sqlalchemy-utils==0.32.16
+sqlparse==0.2.3
+thrift>=0.9.3
+thrift-sasl>=0.2.1
+Flask-Cors>=2.0.0
+
+idna<2.6  # Requests needs this, and idna==2.6 will be installed otherwise

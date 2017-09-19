@@ -1,0 +1,6 @@
+# Local development dependencies go here
+-r test.pip
+-r ecsmanage.pip
+awscli
+docker-compose==1.8.1
+nodeenv

@@ -1,0 +1,15 @@
+-r upstream.pip
+Flask-OAuthLib==0.9.3
+json-logging-py==0.2
+beautifulsoup4==4.6.0
+lxml==3.8.0
+psycopg2==2.6.2
+redis==2.10.5
+
+# Documentation
+recommonmark==0.4.0
+Sphinx==1.5.2
+sphinx-autobuild==0.6.0
+sphinx_rtd_theme==0.2.4
+sphinxcontrib-blockdiag==1.5.3
+git+https://github.com/shomah4a/sphinxcontrib.youtube.git#egg=sphinxcontrib.youtube

@@ -1,0 +1,14 @@
+version: '2'
+services:
+
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  superset:
+    ports:
+      - "8000:8000"

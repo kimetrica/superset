@@ -1,0 +1,13 @@
+*.pyc
+yarn-error.log
+_modules
+superset/assets/coverage/*
+superset/assets/node_modules
+changelog.sh
+.DS_Store
+.coverage
+docs/_build
+_static
+_images
+_modules
+
