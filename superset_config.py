@@ -153,8 +153,8 @@ class CeleryConfig(object):
     CELERY_QUEUES = (Queue(CELERY_DEFAULT_QUEUE, routing_key=CELERY_DEFAULT_QUEUE),)
     # We must set the backend explicitly to override the setting from onadata.settings.common
     BROKER_BACKEND = 'redis'
-    BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379') + '/' + os.environ.get('CELERY_BROKER_REDIS_DB', 1)
-    CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://redis:6379') + '/' + os.environ.get('CELERY_RESULT_REDIS_DB', 1)
+    BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379') + '/' + os.environ.get('CELERY_BROKER_REDIS_DB', '1')
+    CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://redis:6379') + '/' + os.environ.get('CELERY_RESULT_REDIS_DB', '1')
     CELERY_ACCEPT_CONTENT = ['application/json']
     CELERY_TASK_SERIALIZER = 'json'
     CELERY_RESULT_SERIALIZER = 'json'
